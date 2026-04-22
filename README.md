@@ -12,6 +12,7 @@ Ses: tarayıcı **Web Speech API** · Vision: kullanıcının kamerası.
 
 - Mikrofonla konuşma → AI dinler → sesli cevap verir (tr-TR).
 - Kameradan görüntü → AI ortamı/nesneleri felsefi bağlamda yorumlar.
+- **Streaming yanıt**: cevap ChatGPT gibi kelime kelime ekrana akar (SSE).
 - 18 filozofun persona'sı + "Farz Et → Sorgula → Derin Düşün → Karşı-Argüman
   → İyileştir" içsel düşünme protokolü.
 - Feedback döngüsünü önleyen akıllı mikrofon yönetimi (AI konuşurken dinleme

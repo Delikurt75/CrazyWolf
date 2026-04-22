@@ -89,24 +89,53 @@ function captureFrameBase64() {
   return state.canvas.toDataURL("image/jpeg", 0.7);
 }
 
-async function sendToBackend(message) {
+async function streamFromBackend(message, onChunk) {
   const image_base64 = captureFrameBase64();
   const payload = {
     message,
     image_base64,
     history: state.history.slice(-20),
   };
-  const res = await fetch("/api/chat", {
+  const res = await fetch("/api/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = data?.detail || `Sunucu hatası (${res.status})`;
-    throw new Error(msg);
+    let detail = `Sunucu hatası (${res.status})`;
+    try { detail = (await res.json()).detail || detail; } catch (_) {}
+    throw new Error(detail);
   }
-  return data.reply;
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let full = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let sep;
+    while ((sep = buffer.indexOf("\n\n")) !== -1) {
+      const rawEvent = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + 2);
+      const line = rawEvent.split("\n").find((l) => l.startsWith("data:"));
+      if (!line) continue;
+      const jsonStr = line.slice(5).trim();
+      if (!jsonStr) continue;
+      let obj;
+      try { obj = JSON.parse(jsonStr); } catch { continue; }
+      if (obj.error) throw new Error(obj.error);
+      if (obj.text) {
+        full += obj.text;
+        onChunk(obj.text, full);
+      }
+      if (obj.done) return full;
+    }
+  }
+  return full;
 }
 
 function speakReply(text) {
@@ -134,6 +163,17 @@ function speakReply(text) {
   window.speechSynthesis.speak(utter);
 }
 
+function renderBubbleContent(bubble, text) {
+  bubble.innerHTML = "";
+  const parts = text.split(/\n{2,}/);
+  parts.forEach((para) => {
+    const p = document.createElement("p");
+    p.textContent = para.trim();
+    if (p.textContent) bubble.appendChild(p);
+  });
+  if (!bubble.childNodes.length) bubble.textContent = text;
+}
+
 async function handleUserMessage(text) {
   const clean = (text || "").trim();
   if (!clean) return;
@@ -143,12 +183,33 @@ async function handleUserMessage(text) {
   state.thinking = true;
   setStatus("thinking", "Düşünüyor…");
   stopRecognition();
+
   const typingEl = appendTypingIndicator();
+  let streamMsg = null;
+  let streamBubble = null;
+
   try {
-    const reply = await sendToBackend(clean);
-    typingEl.remove();
-    appendMessage("model", reply);
+    const reply = await streamFromBackend(clean, (_chunk, full) => {
+      if (!streamMsg) {
+        typingEl.remove();
+        streamMsg = document.createElement("div");
+        streamMsg.className = "message model streaming";
+        streamBubble = document.createElement("div");
+        streamBubble.className = "bubble";
+        streamMsg.appendChild(streamBubble);
+        els.chat.appendChild(streamMsg);
+      }
+      renderBubbleContent(streamBubble, full);
+      els.chat.scrollTop = els.chat.scrollHeight;
+    });
+
+    if (streamMsg) streamMsg.classList.remove("streaming");
+    else {
+      typingEl.remove();
+      appendMessage("model", reply);
+    }
     state.history.push({ role: "model", text: reply });
+
     if (els.toggleVoice.checked) {
       speakReply(reply);
     } else if (state.stream) {
@@ -159,6 +220,7 @@ async function handleUserMessage(text) {
     }
   } catch (err) {
     typingEl.remove();
+    if (streamMsg) streamMsg.remove();
     console.error(err);
     showError(err.message || "Beklenmeyen bir hata oluştu.");
     setStatus("error", "Hata oluştu");

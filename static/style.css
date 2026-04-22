@@ -175,6 +175,16 @@ button.small { flex: 0 0 auto; font-size: 13px; padding: 8px 12px; }
   border-bottom-left-radius: 4px;
   border-left: 3px solid var(--accent);
 }
+.message.model.streaming .bubble p:last-child::after {
+  content: "▍";
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--accent);
+  animation: cursor-blink 0.9s steps(2, start) infinite;
+}
+@keyframes cursor-blink {
+  to { visibility: hidden; }
+}
 .message .bubble p { margin: 0 0 8px; }
 .message .bubble p:last-child { margin-bottom: 0; }
 

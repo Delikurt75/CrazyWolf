@@ -1,14 +1,21 @@
-"""Gemini API wrapper — vision + text, hata yakalamalı."""
+"""Gemini API wrapper — vision + text, streaming destekli, hata yakalamalı."""
 
 import base64
 import os
 from io import BytesIO
-from typing import Optional
+from typing import Iterator, Optional
 
 import google.generativeai as genai
 from PIL import Image
 
 from app.philosophers import build_system_prompt
+
+
+GENERATION_CONFIG = {
+    "temperature": 0.85,
+    "top_p": 0.95,
+    "max_output_tokens": 1024,
+}
 
 
 class GeminiError(Exception):
@@ -75,37 +82,34 @@ def _build_contents(
     return contents
 
 
+def _friendly_error(exc: Exception) -> GeminiError:
+    err_text = str(exc).lower()
+    if "quota" in err_text or "429" in err_text or "resource_exhausted" in err_text:
+        return GeminiError(
+            "Gemini ücretsiz kota doldu (dakikada 15 / günde 1500 istek). "
+            "Bir süre bekleyip tekrar deneyin."
+        )
+    if "api key" in err_text or "permission" in err_text or "401" in err_text:
+        return GeminiError(
+            "Gemini API anahtarı geçersiz. .env içindeki GEMINI_API_KEY'i kontrol edin."
+        )
+    return GeminiError(f"Gemini isteği başarısız: {exc}")
+
+
 def generate_reply(
     message: str,
     image_base64: Optional[str] = None,
     history: Optional[list[dict]] = None,
 ) -> str:
-    """Gemini'den filozof cevabı al."""
+    """Tek parça (non-streaming) filozof cevabı."""
     model = _get_model()
     image = _decode_image(image_base64) if image_base64 else None
     contents = _build_contents(message, image, history or [])
 
     try:
-        response = model.generate_content(
-            contents,
-            generation_config={
-                "temperature": 0.85,
-                "top_p": 0.95,
-                "max_output_tokens": 1024,
-            },
-        )
+        response = model.generate_content(contents, generation_config=GENERATION_CONFIG)
     except Exception as exc:
-        err_text = str(exc).lower()
-        if "quota" in err_text or "429" in err_text or "resource_exhausted" in err_text:
-            raise GeminiError(
-                "Gemini ücretsiz kota doldu (dakikada 15 / günde 1500 istek). "
-                "Bir süre bekleyip tekrar deneyin."
-            ) from exc
-        if "api key" in err_text or "permission" in err_text or "401" in err_text:
-            raise GeminiError(
-                "Gemini API anahtarı geçersiz. .env içindeki GEMINI_API_KEY'i kontrol edin."
-            ) from exc
-        raise GeminiError(f"Gemini isteği başarısız: {exc}") from exc
+        raise _friendly_error(exc) from exc
 
     text = (getattr(response, "text", "") or "").strip()
     if not text:
@@ -113,3 +117,42 @@ def generate_reply(
             "Gemini boş yanıt döndürdü. Sorunuzu yeniden formüle edip tekrar deneyin."
         )
     return text
+
+
+def generate_reply_stream(
+    message: str,
+    image_base64: Optional[str] = None,
+    history: Optional[list[dict]] = None,
+) -> Iterator[str]:
+    """Gemini'den cevabı parça parça (streaming) al.
+
+    Her yield edilen string, birikmiş cevabın bir sonraki parçasıdır.
+    Boş string yield edilmez. Hatalar GeminiError olarak fırlatılır.
+    """
+    model = _get_model()
+    image = _decode_image(image_base64) if image_base64 else None
+    contents = _build_contents(message, image, history or [])
+
+    try:
+        stream = model.generate_content(
+            contents,
+            generation_config=GENERATION_CONFIG,
+            stream=True,
+        )
+    except Exception as exc:
+        raise _friendly_error(exc) from exc
+
+    any_chunk = False
+    try:
+        for chunk in stream:
+            piece = getattr(chunk, "text", None)
+            if piece:
+                any_chunk = True
+                yield piece
+    except Exception as exc:
+        raise _friendly_error(exc) from exc
+
+    if not any_chunk:
+        raise GeminiError(
+            "Gemini boş yanıt döndürdü. Sorunuzu yeniden formüle edip tekrar deneyin."
+        )

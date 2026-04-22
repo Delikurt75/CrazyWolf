@@ -3,14 +3,16 @@
 from pathlib import Path
 from typing import Optional
 
+import json
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app.gemini_client import GeminiError, generate_reply
+from app.gemini_client import GeminiError, generate_reply, generate_reply_stream
 
 load_dotenv()
 
@@ -68,3 +70,35 @@ def chat(req: ChatRequest) -> ChatResponse:
     except GeminiError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return ChatResponse(reply=reply)
+
+
+@app.post("/api/chat/stream")
+def chat_stream(req: ChatRequest) -> StreamingResponse:
+    """Server-Sent Events akışı. Her satır:  data: {"text"|"error"|"done": ...}\\n\\n"""
+    if not req.message.strip() and not req.image_base64:
+        raise HTTPException(status_code=400, detail="Boş mesaj ve boş görüntü olamaz.")
+
+    def sse(obj: dict) -> str:
+        return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+    def event_generator():
+        try:
+            for piece in generate_reply_stream(
+                message=req.message,
+                image_base64=req.image_base64,
+                history=[turn.model_dump() for turn in req.history],
+            ):
+                yield sse({"text": piece})
+        except GeminiError as exc:
+            yield sse({"error": str(exc)})
+            return
+        except Exception as exc:  # beklenmedik
+            yield sse({"error": f"Sunucu hatası: {exc}"})
+            return
+        yield sse({"done": True})
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
