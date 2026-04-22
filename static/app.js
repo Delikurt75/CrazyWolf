@@ -60,6 +60,16 @@ function appendMessage(role, text) {
   div.appendChild(bubble);
   els.chat.appendChild(div);
   els.chat.scrollTop = els.chat.scrollHeight;
+  return div;
+}
+
+function appendTypingIndicator() {
+  const div = document.createElement("div");
+  div.className = "message model typing";
+  div.innerHTML = '<div class="bubble"><span class="typing-dots"><span></span><span></span><span></span></span></div>';
+  els.chat.appendChild(div);
+  els.chat.scrollTop = els.chat.scrollHeight;
+  return div;
 }
 
 function captureFrameBase64() {
@@ -133,8 +143,10 @@ async function handleUserMessage(text) {
   state.thinking = true;
   setStatus("thinking", "Düşünüyor…");
   stopRecognition();
+  const typingEl = appendTypingIndicator();
   try {
     const reply = await sendToBackend(clean);
+    typingEl.remove();
     appendMessage("model", reply);
     state.history.push({ role: "model", text: reply });
     if (els.toggleVoice.checked) {
@@ -146,6 +158,7 @@ async function handleUserMessage(text) {
       setStatus("", "Hazır");
     }
   } catch (err) {
+    typingEl.remove();
     console.error(err);
     showError(err.message || "Beklenmeyen bir hata oluştu.");
     setStatus("error", "Hata oluştu");
@@ -289,11 +302,10 @@ els.toggleVoice.addEventListener("change", () => {
     startRecognition();
   }
 });
-els.toggleCamera.addEventListener("change", () => {
+els.toggleCamera.addEventListener("change", async () => {
   if (state.stream) {
-    const wasRunning = !els.btnStart.disabled === false;
     stop();
-    if (wasRunning) start();
+    await start();
   } else {
     els.overlay.textContent = els.toggleCamera.checked
       ? "Başla'ya bas"

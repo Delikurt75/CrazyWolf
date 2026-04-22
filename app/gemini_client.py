@@ -27,7 +27,7 @@ def _get_model() -> genai.GenerativeModel:
             "alıp .env dosyasına ekleyin."
         )
 
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     cache_key = f"{api_key[:8]}:{model_name}"
     if cache_key not in _MODEL_CACHE:
         genai.configure(api_key=api_key)
