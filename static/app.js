@@ -305,10 +305,10 @@ function stopRecognition() {
 
 async function start() {
   try {
-    const constraints = {
-      video: els.toggleCamera.checked ? { width: 1280, height: 720 } : false,
-      audio: true,
-    };
+    const wantCamera = els.toggleCamera.checked;
+    const constraints = wantCamera
+      ? { video: { width: 1280, height: 720 }, audio: false }
+      : { audio: true };
     state.stream = await navigator.mediaDevices.getUserMedia(constraints);
   } catch (err) {
     showError(
