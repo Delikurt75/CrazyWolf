@@ -1,0 +1,71 @@
+<!--
+  COOKIE CONSENT BANNER
+  =====================
+  Add this component to your layout (before </body>).
+  Required for GDPR / ePrivacy / KVKK compliance.
+-->
+
+<!-- Option 1: Lightweight Custom Implementation -->
+<div id="cookie-consent" role="dialog" aria-label="Cookie Consent" style="
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a2e;
+  color: #ffffff;
+  padding: 16px 24px;
+  z-index: 9999;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+  font-family: system-ui, -apple-system, sans-serif;
+">
+  <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <p style="margin: 0; flex: 1; min-width: 200px; font-size: 14px; line-height: 1.5;">
+      We use cookies to enhance your experience. By continuing to use this site, you agree to our
+      <a href="/privacy" style="color: #7c83ff; text-decoration: underline;">Privacy Policy</a> and
+      <a href="/cookies" style="color: #7c83ff; text-decoration: underline;">Cookie Policy</a>.
+    </p>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+      <button onclick="acceptCookies()" style="
+        background: #7c83ff;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+      ">Accept All</button>
+      <button onclick="rejectCookies()" style="
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 10px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      ">Essential Only</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
+      document.getElementById('cookie-consent').style.display = 'block';
+    }
+  })();
+
+  function acceptCookies() {
+    localStorage.setItem('cookie-consent', 'all');
+    document.getElementById('cookie-consent').style.display = 'none';
+    // Initialize analytics, tracking, etc.
+    // initAnalytics();
+  }
+
+  function rejectCookies() {
+    localStorage.setItem('cookie-consent', 'essential');
+    document.getElementById('cookie-consent').style.display = 'none';
+  }
+</script>
