@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filozof AI — Sesli & Görüntülü Sohbet</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">&#9775;</span>
+      <div>
+        <h1>Filozof AI</h1>
+        <p class="sub">Sokrates'ten Wittgenstein'a — çok sesli bir diyalog</p>
+      </div>
+    </div>
+    <div class="toggles">
+      <label class="toggle">
+        <input type="checkbox" id="toggle-voice" checked />
+        <span>Sesli mod</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-camera" checked />
+        <span>Kamera</span>
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="camera-panel">
+      <div class="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <div id="video-overlay" class="overlay">Kamera kapalı</div>
+      </div>
+      <div class="status-card">
+        <div class="status-row">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">Hazır — "Başla" tuşuna bas</span>
+        </div>
+        <div class="buttons">
+          <button id="btn-start" class="primary">Başla</button>
+          <button id="btn-stop" class="ghost" disabled>Durdur</button>
+        </div>
+        <button id="btn-send-text" class="ghost small">Yazılı mesaj gönder</button>
+      </div>
+    </aside>
+
+    <section class="chat-panel">
+      <div id="chat" class="chat-log">
+        <div class="message model">
+          <div class="bubble">
+            <p><strong>Merhaba.</strong> Ben bir filozof-danışmanım. Sokrates, Kant, Marcus Aurelius, Wittgenstein ve diğerlerinin bakışıyla düşünürüm.</p>
+            <p>"Başla" tuşuna basarak mikrofon ve kameranı aç. Konuştukça seni duyar, gördüğümü yorumlarım. İlk sorunu söylemeye hazır mısın?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="transcript-live" id="transcript-live"></div>
+    </section>
+  </main>
+
+  <dialog id="error-dialog">
+    <h3>Bir sorun oluştu</h3>
+    <p id="error-text"></p>
+    <form method="dialog"><button class="primary">Tamam</button></form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
