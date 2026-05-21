@@ -544,7 +544,7 @@ class Game {
   }
   _defDown(){if(this.en<5)return;this._def=true;$('bd').classList.add('holding');$('dov').classList.add('active')}
   _defUp(){this._def=false;$('bd').classList.remove('holding');$('dov').classList.remove('active')}
-  _fwd(){if(this._pModel){const v=new THREE.Vector3(0,0,-1).applyQuaternion(this._pModel.quaternion);v.y=0;v.normalize();return v}return new THREE.Vector3(0,0,-1)}
+  _fwd(){if(this._pModel){const v=new THREE.Vector3(0,0,1).applyQuaternion(this._pModel.quaternion);v.y=0;v.normalize();return v}return new THREE.Vector3(0,0,1)}
   _clamp(p){const r=21;const d=Math.sqrt(p.x*p.x+p.z*p.z);if(d>r){p.x=p.x/d*r;p.z=p.z/d*r}}
   _fxAtk(pos){const n=Math.floor(14*this._pfx);for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.06+Math.random()*.06,4,4),new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(.06+Math.random()*.06,1,.6),transparent:true,opacity:1}));m.position.copy(pos);const v=new THREE.Vector3((Math.random()-.5)*8,2+Math.random()*5,(Math.random()-.5)*8);this.scene.add(m);this._particles.push({mesh:m,vel:v,life:.5,maxLife:.5,g:true})}}
   _fxMiss(pos){const m=new THREE.Mesh(new THREE.TorusGeometry(.5,.05,6,20),new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.6}));m.position.copy(pos);this.scene.add(m);this._particles.push({mesh:m,vel:new THREE.Vector3(0,1,0),life:.3,maxLife:.3,su:true})}
