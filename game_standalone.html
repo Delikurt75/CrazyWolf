@@ -385,7 +385,6 @@ function loadGLB(blob,onDone,onFail){
     const box=new THREE.Box3().setFromObject(m);
     const sz=new THREE.Vector3();box.getSize(sz);
     if(sz.y>.01){const s=1.7/sz.y;m.scale.setScalar(s)}
-    const box2=new THREE.Box3().setFromObject(m);m.position.y=-box2.min.y;
     onDone(m);URL.revokeObjectURL(url);
   },undefined,e=>{console.warn('GLB error',e);URL.revokeObjectURL(url);onFail()});
 }
@@ -411,7 +410,7 @@ class MenuViewer {
     this._animate=this._animate.bind(this);this._animate();
   }
   _resize(){const r=this.canvas.getBoundingClientRect();const w=r.width||window.innerWidth;const h=r.height||window.innerHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix()}
-  _set(m){if(this.char)this.scene.remove(this.char);this.char=m;m.position.y=0;this.scene.add(m)}
+  _set(m){if(this.char)this.scene.remove(this.char);this.char=m;const box=new THREE.Box3().setFromObject(m);m.position.y=-box.min.y;this.scene.add(m)}
   updateGLB(blob){loadGLB(blob,m=>this._set(m),()=>this._set(makeBenan()))}
   _animate(){requestAnimationFrame(this._animate);if(this.char)this.char.rotation.y+=.008;if(this.ring)this.ring.material.emissiveIntensity=1.2+Math.sin(performance.now()*.002)*.5;this.renderer.render(this.scene,this.camera)}
 }
@@ -472,13 +471,13 @@ class Game {
     bd.addEventListener('mouseleave',dEnd);
   }
   _setupKeys(){
-    window.addEventListener('keydown',e=>{this._keys[e.code]=true;if(!this.running||this.paused)return;if(e.code==='Space'){e.preventDefault();this._attack()}if(e.code==='KeyE')this._special();if(e.code==='KeyQ')this._defDown();if(e.code==='Escape')this._pause()});
+    window.addEventListener('keydown',e=>{this._keys[e.code]=true;if(e.code==='Escape'){this._pause();return}if(!this.running||this.paused)return;if(e.code==='Space'){e.preventDefault();this._attack()}if(e.code==='KeyE')this._special();if(e.code==='KeyQ')this._defDown()});
     window.addEventListener('keyup',e=>{this._keys[e.code]=false;if(e.code==='KeyQ')this._defUp()});
   }
   _setupPause(){
     $('bp').addEventListener('click',()=>this._pause());
     $('btn-resume').addEventListener('click',()=>this._pause());
-    $('btn-rp').addEventListener('click',()=>{this._pause();this.start()});
+    $('btn-rp').addEventListener('click',()=>{this._pause();this.running=false;this.start()});
     $('btn-mg').addEventListener('click',()=>{this.paused=false;this.running=false;$('po').style.display='none';showScreen('screen-menu')});
   }
   start(){this.running=true;this._reset();this.clock.start();requestAnimationFrame(this.animate)}
@@ -497,7 +496,7 @@ class Game {
     this._camT=new THREE.Vector3(0,G.camDist*.62,G.camDist);
     $('po').style.display='none';$('kf').innerHTML='';$('dov').classList.remove('active');$('combo').classList.remove('show');
     this._updateHUD();
-    const sp=m=>{if(this._session!==sid){this.scene.remove(m);return}m.position.copy(this._pPos);const gl=new THREE.PointLight(0x00b4ff,2,5);gl.position.y=1.2;m.add(gl);this.scene.add(m);this._pModel=m};
+    const sp=m=>{if(this._session!==sid){this.scene.remove(m);return}const box=new THREE.Box3().setFromObject(m);const groundY=-box.min.y;m.userData.groundY=groundY;m.position.copy(this._pPos);m.position.y=groundY;const gl=new THREE.PointLight(0x00b4ff,2,5);gl.position.y=1.2;m.add(gl);this.scene.add(m);this._pModel=m};
     if(GLBStore.player)loadGLB(GLBStore.player,sp,()=>sp(makeBenan()));else sp(makeBenan());
   }
   _spawnEnemy(){
@@ -549,7 +548,7 @@ class Game {
   _clamp(p){const r=21;const d=Math.sqrt(p.x*p.x+p.z*p.z);if(d>r){p.x=p.x/d*r;p.z=p.z/d*r}}
   _fxAtk(pos){const n=Math.floor(14*this._pfx);for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.06+Math.random()*.06,4,4),new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(.06+Math.random()*.06,1,.6),transparent:true,opacity:1}));m.position.copy(pos);const v=new THREE.Vector3((Math.random()-.5)*8,2+Math.random()*5,(Math.random()-.5)*8);this.scene.add(m);this._particles.push({mesh:m,vel:v,life:.5,maxLife:.5,g:true})}}
   _fxMiss(pos){const m=new THREE.Mesh(new THREE.TorusGeometry(.5,.05,6,20),new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.6}));m.position.copy(pos);this.scene.add(m);this._particles.push({mesh:m,vel:new THREE.Vector3(0,1,0),life:.3,maxLife:.3,su:true})}
-  _fxDeath(pos){const n=Math.floor(20*this._pfx);for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.08+Math.random()*.1,.08+Math.random()*.1,.08),new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(0,1,.3+Math.random()*.3)}));m.position.copy(pos);const v=new THREE.Vector3((Math.random()-.5)*12,4+Math.random()*9,(Math.random()-.5)*12);this.scene.add(m);this._particles.push({mesh:m,vel:v,life:1.3,maxLife:1.3,g:true})}}
+  _fxDeath(pos){const n=Math.floor(20*this._pfx);for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.08+Math.random()*.1,.08+Math.random()*.1,.08),new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(0,1,.3+Math.random()*.3),transparent:true}));m.position.copy(pos);const v=new THREE.Vector3((Math.random()-.5)*12,4+Math.random()*9,(Math.random()-.5)*12);this.scene.add(m);this._particles.push({mesh:m,vel:v,life:1.3,maxLife:1.3,g:true})}}
   _fxNum(pos,dmg){
     const c=document.createElement('canvas');c.width=100;c.height=50;const ctx=c.getContext('2d');
     ctx.font='bold 30px Arial';ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=5;ctx.strokeText(`-${dmg}`,50,36);ctx.fillStyle=dmg>=40?'#ffca28':'#ff5252';ctx.fillText(`-${dmg}`,50,36);
@@ -602,13 +601,15 @@ class Game {
     if(mov&&!this._def){
       this._pPos.x+=jx*6.5*dt;this._pPos.z+=jy*6.5*dt;this._clamp(this._pPos);
       if(this._pModel){
-        this._pModel.position.copy(this._pPos);this._pModel.position.y=Math.sin(this.elapsed*9)*.04;
+        const groundY=this._pModel.userData.groundY||0;
+        this._pModel.position.copy(this._pPos);this._pModel.position.y=groundY+Math.sin(this.elapsed*9)*.04;
         const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(jx,jy)+Math.PI);
         this._pModel.quaternion.slerp(q,.2);
         if(this._pModel.userData&&this._pModel.userData.armL){const ph=this.elapsed*8;this._pModel.userData.armL.rotation.x=Math.sin(ph)*.6;this._pModel.userData.armR.rotation.x=-Math.sin(ph)*.6;this._pModel.userData.legL.rotation.x=-Math.sin(ph)*.5;this._pModel.userData.legR.rotation.x=Math.sin(ph)*.5}
       }
     } else if(this._pModel){
-      this._pModel.position.copy(this._pPos);this._pModel.position.y=0;
+      const groundY=this._pModel.userData.groundY||0;
+      this._pModel.position.copy(this._pPos);this._pModel.position.y=groundY;
       if(this._pModel.userData&&this._pModel.userData.armL){this._pModel.userData.armL.rotation.x*=.85;this._pModel.userData.armR.rotation.x*=.85;this._pModel.userData.legL.rotation.x*=.85;this._pModel.userData.legR.rotation.x*=.85}
     }
     // Camera
