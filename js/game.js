@@ -473,7 +473,6 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 200);
     this.camera.position.set(0, 9, 13);
     this.camera.lookAt(0, 0, 0);
-    this._camOffset = new THREE.Vector3(0, 8, 11);
   }
   _setupLights() {
     this.scene.add(new THREE.AmbientLight(0x303068, 1.2));
@@ -581,10 +580,12 @@ class Game {
 
   // ── Reset / Start ──
   start() {
-    this.running = true;
+    if (!this.running) {
+      this.running = true;
+      requestAnimationFrame(this.animate);
+    }
     this._reset();
     this.clock.start();
-    requestAnimationFrame(this.animate);
   }
   _reset() {
     this._session++;
@@ -611,7 +612,6 @@ class Game {
     this._attackCD = 0;
     this._specialCD = 0;
     this._defending = false;
-    this._defenseDrain = 0;
     this._invincible = 0;
     this._waveTimer = 0;
     this._waveMax = 5;
@@ -623,7 +623,6 @@ class Game {
     this._comboTimer = 0;
 
     this._playerPos = new THREE.Vector3(0, 0, 0);
-    this._playerYaw = 0;
     this._camTarget = new THREE.Vector3(0, Settings.camDist * 0.62, Settings.camDist);
 
     $('pause-overlay').style.display = 'none';
@@ -1222,6 +1221,9 @@ class Game {
       this.arenaRing.material.emissiveIntensity = 1.5 + Math.sin(this.elapsed * 1.8) * 0.6;
     }
 
+    // Update HUD
+    this._updateHUD();
+
     // Clean dead enemies
     for (let i = this._enemies.length - 1; i >= 0; i--) {
       if (this._enemies[i].state === 'dead') this._enemies.splice(i, 1);
@@ -1340,16 +1342,6 @@ async function boot() {
   game = new Game();
   menuViewer = new MenuViewer('menu-canvas');
   charViewer = new MenuViewer('char-canvas');
-
-  // Inject animations
-  const style = document.createElement('style');
-  style.textContent = `@keyframes waveAnnounce {
-    0% { opacity: 0; transform: scale(0.4) translateY(20px); }
-    20% { opacity: 1; transform: scale(1.1) translateY(0); }
-    80% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.2); }
-  }`;
-  document.head.appendChild(style);
 
   wireSettings(game, menuViewer, charViewer);
 
