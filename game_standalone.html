@@ -603,7 +603,7 @@ class Game {
       if(this._pModel){
         const groundY=this._pModel.userData.groundY||0;
         this._pModel.position.copy(this._pPos);this._pModel.position.y=groundY+Math.sin(this.elapsed*9)*.04;
-        const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(jx,jy)+Math.PI);
+        const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(jx,jy));
         this._pModel.quaternion.slerp(q,.2);
         if(this._pModel.userData&&this._pModel.userData.armL){const ph=this.elapsed*8;this._pModel.userData.armL.rotation.x=Math.sin(ph)*.6;this._pModel.userData.armR.rotation.x=-Math.sin(ph)*.6;this._pModel.userData.legL.rotation.x=-Math.sin(ph)*.5;this._pModel.userData.legR.rotation.x=Math.sin(ph)*.5}
       }
@@ -625,7 +625,7 @@ class Game {
       const tp=this._pPos.clone().sub(e.model.position);tp.y=0;const dist=tp.length();
       if(dist>1.8){
         const step=tp.clone().normalize().multiplyScalar(e.speed*dt);e.model.position.add(step);e.model.position.y=Math.sin(e.bobT)*.04;
-        const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(step.x,step.z)+Math.PI);e.model.quaternion.slerp(q,.15);
+        const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(step.x,step.z));e.model.quaternion.slerp(q,.15);
         if(e.model.userData&&e.model.userData.armL){const ph=e.bobT*2;e.model.userData.armL.rotation.x=Math.sin(ph)*.5;e.model.userData.armR.rotation.x=-Math.sin(ph)*.5;e.model.userData.legL.rotation.x=-Math.sin(ph)*.4;e.model.userData.legR.rotation.x=Math.sin(ph)*.4}
       } else {
         e.aCD-=dt;
