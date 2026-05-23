@@ -93,6 +93,7 @@ function Sim() {
   const glbUrl = useApp((s) => s.glbUrl);
 
   const cls = useMemo(() => CLASSES[classId ?? 'savasci'] ?? CLASSES.savasci, [classId]);
+  const preset = QUALITY_PRESETS[settings.quality];
 
   // Enemy list as React state so meshes mount/unmount cleanly.
   const [enemies, setEnemies] = useState<EnemyState[]>([]);
