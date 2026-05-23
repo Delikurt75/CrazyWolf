@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useInput, useApp } from '../lib/store';
 
-// Multi-touch joystick: tracks its own pointer id, doesn't steal taps from buttons.
+// Floating joystick: base spawns at touch point for natural thumb feel.
 export function Joystick() {
   const zoneRef = useRef<HTMLDivElement>(null);
   const baseRef = useRef<HTMLDivElement>(null);
@@ -15,14 +15,21 @@ export function Joystick() {
     const knob = knobRef.current!;
     let pointerId: number | null = null;
     let centerX = 0, centerY = 0;
-    const maxR = jsSize * 0.32;
+    const maxR = Math.round(jsSize * 0.42);
+    const half = jsSize / 2;
 
-    const reset = () => {
-      pointerId = null;
+    const resetBase = () => {
+      base.style.left = '';
+      base.style.top = '';
       knob.style.left = '50%';
       knob.style.top = '50%';
       knob.style.transform = 'translate(-50%, -50%)';
       base.classList.remove('active');
+    };
+
+    const reset = () => {
+      pointerId = null;
+      resetBase();
       setMove(0, 0);
     };
 
@@ -30,18 +37,23 @@ export function Joystick() {
       if (pointerId !== null) return;
       e.preventDefault();
       pointerId = e.pointerId;
-      const rect = base.getBoundingClientRect();
-      centerX = rect.left + rect.width / 2;
-      centerY = rect.top + rect.height / 2;
+      const zoneRect = zone.getBoundingClientRect();
+      centerX = e.clientX;
+      centerY = e.clientY;
+      // Clamp base position so it stays fully inside zone
+      const bx = Math.min(Math.max(e.clientX - zoneRect.left, half), zoneRect.width - half);
+      const by = Math.min(Math.max(e.clientY - zoneRect.top, half), zoneRect.height - half);
+      base.style.left = `${bx - half}px`;
+      base.style.top = `${by - half}px`;
       base.classList.add('active');
       try { zone.setPointerCapture(e.pointerId); } catch {}
-      move(e.clientX, e.clientY);
+      moveKnob(e.clientX, e.clientY);
     };
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerId !== pointerId) return;
       e.preventDefault();
-      move(e.clientX, e.clientY);
+      moveKnob(e.clientX, e.clientY);
     };
 
     const onUp = (e: PointerEvent) => {
@@ -50,7 +62,7 @@ export function Joystick() {
       reset();
     };
 
-    const move = (x: number, y: number) => {
+    const moveKnob = (x: number, y: number) => {
       let dx = x - centerX;
       let dy = y - centerY;
       const d = Math.sqrt(dx * dx + dy * dy);
@@ -58,38 +70,35 @@ export function Joystick() {
         dx = (dx / d) * maxR;
         dy = (dy / d) * maxR;
       }
-      const baseRect = base.getBoundingClientRect();
-      const localX = baseRect.width / 2 + dx;
-      const localY = baseRect.height / 2 + dy;
-      knob.style.left = `${(localX / baseRect.width) * 100}%`;
-      knob.style.top = `${(localY / baseRect.height) * 100}%`;
+      knob.style.left = `${half + dx}px`;
+      knob.style.top = `${half + dy}px`;
       knob.style.transform = 'translate(-50%, -50%)';
       const nx = dx / maxR;
       const ny = dy / maxR;
-      // Dead zone
       const m = Math.sqrt(nx * nx + ny * ny);
-      if (m < 0.15) setMove(0, 0); else setMove(nx, ny);
+      if (m < 0.07) setMove(0, 0); else setMove(nx, ny);
     };
 
     zone.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    zone.addEventListener('pointermove', onMove);
+    zone.addEventListener('pointerup', onUp);
+    zone.addEventListener('pointercancel', onUp);
+
     return () => {
       zone.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      zone.removeEventListener('pointermove', onMove);
+      zone.removeEventListener('pointerup', onUp);
+      zone.removeEventListener('pointercancel', onUp);
     };
   }, [jsSize, setMove]);
 
   return (
-    <div
-      className="joystick-zone"
-      ref={zoneRef}
-      style={{ ['--js-size' as any]: `${jsSize}px` } as React.CSSProperties}
-    >
-      <div className="joystick-base" ref={baseRef}>
+    <div className="joystick-zone" ref={zoneRef}>
+      <div
+        className="joystick-base"
+        ref={baseRef}
+        style={{ width: jsSize, height: jsSize } as React.CSSProperties}
+      >
         <div className="joystick-knob" ref={knobRef} />
       </div>
     </div>

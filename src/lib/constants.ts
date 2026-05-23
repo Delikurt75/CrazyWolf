@@ -16,8 +16,8 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   quality: 'medium',
-  joystickSize: 170,
-  buttonSize: 90,
+  joystickSize: 160,
+  buttonSize: 100,
   camDistance: 11,
   sfx: true,
   music: true,

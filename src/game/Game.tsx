@@ -271,7 +271,18 @@ function Sim() {
     const mult = w.type === 'ranged' ? cls.rangedMult : cls.meleeMult;
     const finalDmg = dmg * mult;
 
-    const forward = new THREE.Vector3(Math.sin(s.playerAngle), 0, Math.cos(s.playerAngle));
+    // Use joystick direction for attack aim if stick is active — feels more responsive.
+    const inputNow = useInput.getState();
+    const jLen = Math.sqrt(inputNow.moveX ** 2 + inputNow.moveY ** 2);
+    let atkAngle = s.playerAngle;
+    if (jLen > 0.15) {
+      const cYaw = Math.atan2(camera.position.x - s.playerPos.x, camera.position.z - s.playerPos.z) + Math.PI;
+      const cf = new THREE.Vector3(Math.sin(cYaw), 0, Math.cos(cYaw));
+      const cr = new THREE.Vector3(cf.z, 0, -cf.x);
+      const ad = new THREE.Vector3().addScaledVector(cf, -inputNow.moveY).addScaledVector(cr, inputNow.moveX);
+      if (ad.lengthSq() > 0) { ad.normalize(); atkAngle = Math.atan2(ad.x, ad.z); }
+    }
+    const forward = new THREE.Vector3(Math.sin(atkAngle), 0, Math.cos(atkAngle));
 
     if (w.type === 'ranged') {
       let best: { e: EnemyState; dist: number } | null = null;
@@ -283,7 +294,7 @@ function Sim() {
         if (dist > w.range) continue;
         const dx2 = dx / dist, dz2 = dz / dist;
         const dot = dx2 * forward.x + dz2 * forward.z;
-        if (dot < 0.5) continue;
+        if (dot < 0.3) continue;
         if (!best || dist < best.dist) best = { e: en, dist };
       }
       const muzzle = s.playerPos.clone().setY(1.4).add(forward.clone().multiplyScalar(0.6));
@@ -300,7 +311,7 @@ function Sim() {
         if (dist > w.range + 0.6) continue;
         const dx2 = dx / dist, dz2 = dz / dist;
         const dot = dx2 * forward.x + dz2 * forward.z;
-        if (dot < 0.4) continue;
+        if (dot < 0.15) continue;
         damageEnemy(en, finalDmg, new THREE.Vector3(en.posX, 1.2, en.posZ));
         any = true;
       }
@@ -430,17 +441,18 @@ function Sim() {
       if (moveDir.lengthSq() > 0) moveDir.normalize();
     }
     const targetSpeed = walking ? cls.speed * (input.defenseDown ? 0.5 : 1) : 0;
-    s.playerVel.lerp(moveDir.multiplyScalar(targetSpeed), 0.25);
+    // Snappy acceleration when moving, quick decel when releasing
+    s.playerVel.lerp(moveDir.multiplyScalar(targetSpeed), walking ? 0.55 : 0.45);
     s.playerPos.addScaledVector(s.playerVel, dt);
     const d = Math.sqrt(s.playerPos.x ** 2 + s.playerPos.z ** 2);
     if (d > ARENA_RADIUS - 0.8) {
       const k = (ARENA_RADIUS - 0.8) / d;
       s.playerPos.x *= k; s.playerPos.z *= k;
     }
-    s.walkAmount = THREE.MathUtils.lerp(s.walkAmount, walking ? Math.min(1, mLen * 1.2) : 0, 0.18);
+    s.walkAmount = THREE.MathUtils.lerp(s.walkAmount, walking ? Math.min(1, mLen * 1.2) : 0, 0.22);
     if (walking) {
       const tgt = Math.atan2(moveDir.x, moveDir.z);
-      s.playerAngle = lerpAngle(s.playerAngle, tgt, 0.18);
+      s.playerAngle = lerpAngle(s.playerAngle, tgt, 0.30);
     }
     if (s.attackAnim > 0) {
       s.attackAnim += dt * 4;
@@ -609,7 +621,7 @@ function Sim() {
       settings.camDistance * 0.55,
       s.playerPos.z - Math.cos(s.playerAngle) * settings.camDistance * 0.7,
     );
-    camera.position.lerp(desired, 0.08);
+    camera.position.lerp(desired, 0.15);
     if (s.shake > 0) {
       camera.position.x += (Math.random() - 0.5) * s.shake * 0.3;
       camera.position.y += (Math.random() - 0.5) * s.shake * 0.3;
