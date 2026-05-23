@@ -189,9 +189,11 @@ function Sim() {
 
   function scheduleWave(n: number) {
     const wave = getWave(n);
+    // Apply maxEnemies limit when autoPerf is enabled
+    const count = settings.autoPerf ? Math.min(wave.count, preset.maxEnemies) : wave.count;
     let t = 0.5;
     state.current.pendingSpawns = [];
-    for (let i = 0; i < wave.count; i++) {
+    for (let i = 0; i < count; i++) {
       const type = wave.types[i % wave.types.length];
       state.current.pendingSpawns.push({ type, delay: t });
       t += wave.delay;

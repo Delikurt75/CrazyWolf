@@ -175,34 +175,34 @@ export function PlayerModel({ glbUrl, idle = true, walkAmount = 0, attackAnim = 
     if (usingGlb && wrapperRef.current) {
       const bob = idle ? Math.sin(t.current * 2) * 0.015 : 0;
       wrapperRef.current.position.y = bob;
-      return;
-    }
-    const { armL, armR, legL, legR, head, torso } = proceduralRefs;
-    const breath = Math.sin(t.current * 2) * 0.02;
-    torso.position.y = 1.2 + breath;
-    head.position.y = 1.85 + breath;
-    const speed = 9;
-    const swing = walkAmount * 0.7;
-    armL.rotation.x = Math.sin(t.current * speed) * swing - walkAmount * 0.2;
-    armR.rotation.x = -Math.sin(t.current * speed) * swing - walkAmount * 0.2;
-    legL.rotation.x = -Math.sin(t.current * speed) * swing * 0.9;
-    legR.rotation.x = Math.sin(t.current * speed) * swing * 0.9;
-    if (attackAnim > 0) {
-      const a = Math.sin(attackAnim * Math.PI);
-      armR.rotation.x = -a * 2.4;
-      armR.rotation.z = -a * 0.3;
-      torso.rotation.y = a * 0.25;
     } else {
-      torso.rotation.y *= 0.85;
-    }
-    if (hitFlash > 0) {
-      torso.traverse((o: any) => {
-        if (o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(hitFlash * 0.6, 0, 0);
-      });
-    } else {
-      torso.traverse((o: any) => {
-        if (o.isMesh && o.material && o.material.emissive) o.material.emissive.multiplyScalar(0.9);
-      });
+      const { armL, armR, legL, legR, head, torso } = proceduralRefs;
+      const breath = Math.sin(t.current * 2) * 0.02;
+      torso.position.y = 1.2 + breath;
+      head.position.y = 1.85 + breath;
+      const speed = 9;
+      const swing = walkAmount * 0.7;
+      armL.rotation.x = Math.sin(t.current * speed) * swing - walkAmount * 0.2;
+      armR.rotation.x = -Math.sin(t.current * speed) * swing - walkAmount * 0.2;
+      legL.rotation.x = -Math.sin(t.current * speed) * swing * 0.9;
+      legR.rotation.x = Math.sin(t.current * speed) * swing * 0.9;
+      if (attackAnim > 0) {
+        const a = Math.sin(attackAnim * Math.PI);
+        armR.rotation.x = -a * 2.4;
+        armR.rotation.z = -a * 0.3;
+        torso.rotation.y = a * 0.25;
+      } else {
+        torso.rotation.y *= 0.85;
+      }
+      if (hitFlash > 0) {
+        torso.traverse((o: any) => {
+          if (o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(hitFlash * 0.6, 0, 0);
+        });
+      } else {
+        torso.traverse((o: any) => {
+          if (o.isMesh && o.material && o.material.emissive) o.material.emissive.multiplyScalar(0.9);
+        });
+      }
     }
   });
 
