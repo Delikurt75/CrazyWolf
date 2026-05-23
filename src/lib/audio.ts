@@ -23,10 +23,9 @@ class AudioBus {
     return this.ctx;
   }
 
+  // Toggle SFX only. Music is independent (own gain via startMusic/stopMusic).
   setEnabled(b: boolean) {
     this.enabled = b;
-    if (!b && this.master) this.master.gain.value = 0;
-    else if (b && this.master) this.master.gain.value = 0.6;
   }
 
   resume() {

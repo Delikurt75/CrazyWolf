@@ -446,11 +446,16 @@ function Sim() {
     }
     if (s.hitFlash > 0) s.hitFlash = Math.max(0, s.hitFlash - dt * 4);
 
-    if (input.defenseDown && s.energy > 0) s.energy = Math.max(0, s.energy - 20 * dt);
+    const defenseActive = input.defenseDown && s.energy > 0;
+    if (defenseActive) s.energy = Math.max(0, s.energy - 20 * dt);
     else s.energy = Math.min(s.energyMax, s.energy + 10 * dt);
     s.tengri = Math.min(s.tengriMax, s.tengri + 5 * dt);
     setEnergy(s.energy, s.energyMax);
     setTengri(s.tengri, s.tengriMax);
+    // Sync HUD defense overlay to current defense activity (held + has energy).
+    if (useGameUi.getState().defenseHeld !== defenseActive) {
+      useGameUi.getState().setDefenseHeld(defenseActive);
+    }
 
     if (s.combo > 0) {
       s.comboTimer -= dt;
@@ -515,6 +520,12 @@ function Sim() {
           en.posX += (ox / d2) * (1.2 - d2) * 0.5;
           en.posZ += (oz / d2) * (1.2 - d2) * 0.5;
         }
+      }
+      // Arena bound clamp (don't let them leave the stone ring)
+      const ed = Math.sqrt(en.posX * en.posX + en.posZ * en.posZ);
+      if (ed > ARENA_RADIUS - 0.8) {
+        const k = (ARENA_RADIUS - 0.8) / ed;
+        en.posX *= k; en.posZ *= k;
       }
       if (en.hitFlash > 0) en.hitFlash = Math.max(0, en.hitFlash - dt * 5);
       if (en.attackAnim > 0) {
