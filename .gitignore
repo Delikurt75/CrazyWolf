@@ -1,4 +1,9 @@
 .claude/
 node_modules/
+dist/
+dev-dist/
 *.log
 .DS_Store
+.vite/
+.env.local
+*.tsbuildinfo
