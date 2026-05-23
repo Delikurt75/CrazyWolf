@@ -1,4 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Arena } from './Arena';
@@ -28,14 +29,14 @@ export function Game() {
       <Canvas
         shadows={preset.shadows}
         dpr={[1, preset.pixelRatio]}
-        camera={{ position: [0, 6, 12], fov: 55, near: 0.1, far: 250 }}
+        camera={{ position: [0, 7, 13], fov: 58, near: 0.1, far: 250 }}
         gl={{ antialias: settings.quality !== 'low', powerPreference: 'high-performance' }}
       >
         <color attach="background" args={[`#${ARENA.fogColor.toString(16).padStart(6, '0')}`]} />
-        <fog attach="fog" args={[`#${ARENA.fogColor.toString(16).padStart(6, '0')}`, 18, 90]} />
+        <fog attach="fog" args={[`#${ARENA.fogColor.toString(16).padStart(6, '0')}`, 22, 95]} />
 
-        <ambientLight intensity={0.55} color={ARENA.ambient} />
-        <hemisphereLight args={[0x8aa6ff, 0x3a2418, 0.4]} />
+        <ambientLight intensity={0.45} color={ARENA.ambient} />
+        <hemisphereLight args={[0x5566cc, 0x2a1808, 0.5]} />
         <directionalLight
           position={[10, 18, 6]}
           intensity={ARENA.sunIntensity}
@@ -54,6 +55,10 @@ export function Game() {
           <Effects />
           <Sim />
         </Suspense>
+        <EffectComposer enableNormalPass={false}>
+          <Bloom luminanceThreshold={0.35} luminanceSmoothing={0.9} intensity={1.8} mipmapBlur />
+          <Vignette eskil={false} offset={0.28} darkness={0.65} />
+        </EffectComposer>
       </Canvas>
     </div>
   );
