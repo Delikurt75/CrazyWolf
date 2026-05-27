@@ -1,0 +1,88 @@
+{
+  "homepage": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Tengri Kezgen Köçer",
+      "alternateName": "Tengri Kezgen Kocer",
+      "url": "https://tengrikezgenkocer.com",
+      "description": "Global migration, settlement, and living guide for 200+ countries. Compare cost of living, healthcare, visa processes, and disability rights.",
+      "foundingDate": "2024",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://tengrikezgenkocer.com/contact"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Tengri Kezgen Köçer",
+      "url": "https://tengrikezgenkocer.com",
+      "description": "Migration, settlement & living guide for 200+ countries",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://tengrikezgenkocer.com/find-country?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Tengri Kezgen Köçer",
+      "url": "https://tengrikezgenkocer.com",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "description": "7-day free trial"
+      },
+      "featureList": [
+        "Country comparison tool for 200+ countries",
+        "AI-powered migration advisor (text, voice, video)",
+        "Cost of living comparison",
+        "Healthcare system comparison",
+        "Visa and migration process guides",
+        "Disability rights information",
+        "Travel destination comparison"
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Tengri Kezgen Köçer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tengri Kezgen Köçer is a comprehensive global platform that provides migration, settlement, cost of living, healthcare, visa, and disability rights information for over 200 countries. It includes an AI advisor that can assist users via text, voice, or video."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many countries does Tengri Kezgen Köçer cover?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tengri Kezgen Köçer provides detailed data and guidance for over 200 countries worldwide, including information on cost of living, healthcare systems, visa processes, and disability rights."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What advisor modes are available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tengri Kezgen Köçer offers 6 different advisor modes including text chat, voice chat, and video consultation to help users make informed migration and settlement decisions."
+          }
+        }
+      ]
+    }
+  ],
+  "_instructions": "Add these as <script type='application/ld+json'> tags in the <head> section of the homepage. Each object in the array should be in its own script tag."
+}
