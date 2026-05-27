@@ -1,0 +1,14 @@
+# robots.txt for https://tengrikezgenkocer.com
+
+User-agent: *
+Allow: /
+
+# Block private authenticated routes from crawlers
+Disallow: /find-country
+Disallow: /ai-advisor
+Disallow: /visa-migration
+Disallow: /healthcare
+Disallow: /disability-rights
+Disallow: /travel-compare
+
+Sitemap: https://tengrikezgenkocer.com/sitemap.xml
